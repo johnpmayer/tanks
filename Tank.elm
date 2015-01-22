@@ -1,17 +1,23 @@
 
 module Tank where
 
+import Color (..)
+import Graphics.Collage (..)
+import List (..)
+import Signal (..)
+import Time (..)
+
 {- Section 1: Input -}
 
-data Drive = Forward | Reverse | Stop
-data Turn = Left | Right | Straight
+type Drive = Forward | Reverse | Stop
+type Turn = Left | Right | Straight
 
-data TankInput = TaI Drive Turn
+type TankInput = TaI Drive Turn
 
--- defaultTankInput :: TankInput
+defaultTankInput : TankInput
 defaultTankInput = TaI Stop Straight
 
--- updateTurn :: Int -> Turn -> Turn
+updateTurn : Int -> Turn -> Turn
 updateTurn key turn =
   let leftKey = 65
       rightKey = 68
@@ -21,7 +27,7 @@ updateTurn key turn =
     Straight -> if key == leftKey  then Left else
                 if key == rightKey then Right else Straight
 
--- updateDrive :: Int -> Drive -> Drive
+updateDrive : Int -> Drive -> Drive
 updateDrive key drive =
   let fwdKey = 87
       revKey = 83
@@ -31,35 +37,36 @@ updateDrive key drive =
     Stop    -> if key == fwdKey then Forward else
                if key == revKey then Reverse else Stop
 
--- updateInput :: Int -> TankInput -> TankInput
+updateTankInput : Int -> TankInput -> TankInput
 updateTankInput key (TaI drive turn) = 
   TaI (updateDrive key drive) (updateTurn key turn)
 
--- tankInput :: Signal [Int] -> Signal TankInput
-tankInput ks = lift (foldl updateTankInput defaultTankInput) ks
+tankInput : Signal (List Int) -> Signal TankInput
+tankInput ks = (foldl updateTankInput defaultTankInput) <~ ks
 
-data SampledTankInput = STaI Float TankInput
+type SampledTankInput = STaI Float TankInput
 
--- sampledTankInput :: Signal Time -> 
---                     Signal [Int] ->
---                     Signal SampledTankInput
+sampledTankInput : Signal Time -> 
+                   Signal (List Int) ->
+                   Signal SampledTankInput
 sampledTankInput tick ks = 
-  sampleOn tick (lift2 STaI tick (tankInput ks))
+  sampleOn tick (STaI <~ tick ~ (tankInput ks))
 
 {- Section 2: Model -}
 
-data TankPos = TaP (Float, Float) Float
-defaultTank = TaP (200,200) 0
+type TankPos = TaP (Float, Float) Float
+
+defaultTank = TaP (0,0) 0
 
 turnRate = 0.002
 driveRate = 4
 
--- stepTank :: SampledTankInput -> TankPos -> TankPos
+stepTank : SampledTankInput -> TankPos -> TankPos
 stepTank (STaI delta (TaI drive turn)) (TaP (x,y) theta) =
   let newTheta = case turn of
                    Straight -> theta
-                   Left -> theta + (turnRate * delta)
-                   Right -> theta - (turnRate * delta)
+                   Left -> theta - (turnRate * delta)
+                   Right -> theta + (turnRate * delta)
       newX = case drive of
                Stop -> x
                Forward -> x + (driveRate * (cos newTheta))
@@ -70,15 +77,15 @@ stepTank (STaI delta (TaI drive turn)) (TaP (x,y) theta) =
                Reverse -> y + (driveRate * (sin newTheta))
   in TaP (newX, newY) newTheta
 
--- tankState :: Signal Time ->
---              Signal [Int] ->
---              Signal TankPos
+tankState : Signal Time ->
+            Signal (List Int) ->
+            Signal TankPos
 tankState tick ks = 
   foldp stepTank defaultTank (sampledTankInput tick ks)
 
 {- View -}
 
--- drawTank :: TankPos -> Form
+drawTank : TankPos -> Form
 drawTank (TaP (x,y) theta) = 
-  let angle = 0 - (theta / (2 * pi)) in
-  rotate angle $ filled black (rect 30 20 (truncate x, truncate y))
+  let angle = 0 - (theta) in
+  move (x,y) <| rotate angle <| filled black (rect 30 20)

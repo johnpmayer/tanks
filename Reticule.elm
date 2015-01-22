@@ -1,20 +1,24 @@
 
 module Reticule where
 
-data ReticulePos = ReP (Int, Int)
+import Color (..)
+import Graphics.Collage (..)
+import Signal (..)
 
--- reticuleState :: Signal (Int,Int) -> Signal ReticulePos
-reticuleState mp = lift ReP mp
+type ReticulePos = ReP (Int, Int)
 
--- reticule :: Element
+reticuleState : Signal (Int,Int) -> Signal ReticulePos
+reticuleState mp = ReP <~ mp
+
+reticule : Form
 reticule =
   let c = 10
       t = 3
       wh = (2*c)+1
-      hori = solid red $ segment (c-c, c) (c+c, c)
-      vert = solid red $ segment (c, c-c) (c, c+c)
-      circ = outlined red $ circle (c - t) (c, c)
-  in collage wh wh [hori, vert, circ]
+      hori = traced (solid red) <| segment (0-c, 0) (c, 0)
+      vert = traced (solid red) <| segment (0, 0-c) (0, c)
+      circ = outlined (solid red) <| circle (c - t)
+  in group [hori, vert, circ]
 
--- drawReticule :: ReticulePos -> Form
-drawReticule (ReP coord) = toForm coord reticule
+drawReticule : ReticulePos -> Form
+drawReticule (ReP (xi, yi)) = move (toFloat xi, toFloat yi) <| reticule
