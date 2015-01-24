@@ -1,22 +1,17 @@
 
-= Tanks
-== Objects
-=== Tank
-    Position (x,y)
-    Direction theta
-    Hooked up to WASD controls
-=== Reticule
-    Position (x,y)
-    Hooked up to mouse
-=== Turret
-    Position = Tank position
-    Direction computed form tank and reticule
-=== Bullets
-    Position (x,y)
-    Direction theta
-    Constantly updated
-    Created each time you click mouse (destroyed out of screen)
+# Tanks
 
-== ToDo
-=== Clear bullets when the leave map
-=== Replace crappy boxes with some sprites
+## Multiplayer via WebRTC
+
+* Signaling server
+* WebRTC plumbing
+* Ports to drive embedded elm game
+
+## Gameplay
+
+* Game has n tanks, 3n players
+* Each tank has a Commander, Gunner/Loader, and Driver
+
+## ToDo
+### Clear bullets when the leave map
+### Replace crappy boxes with some sprites
