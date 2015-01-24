@@ -1,12 +1,7 @@
-all: Game.html ShootDemo.html
-
-Game.html: *.elm
-	elm --make -r elm-runtime.js Game.elm
-
-ShootDemo.html: *.elm
-	elm --make -r elm-runtime.js ShootDemo.elm
+all: 
+	elm-make src/Game.elm
 
 clean:
-	rm -f *.html
+	rm -rf elm-stuff
 
 .PHONY: clean
