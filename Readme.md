@@ -1,22 +1,22 @@
 
-* Tanks
-** Objects
-*** Tank
+= Tanks
+== Objects
+=== Tank
     Position (x,y)
     Direction theta
     Hooked up to WASD controls
-*** Reticule
+=== Reticule
     Position (x,y)
     Hooked up to mouse
-*** Turret
+=== Turret
     Position = Tank position
     Direction computed form tank and reticule
-*** Bullets
+=== Bullets
     Position (x,y)
     Direction theta
     Constantly updated
     Created each time you click mouse (destroyed out of screen)
 
-** ToDo
-*** Clear bullets when the leave map
-*** Replace crappy boxes with some sprites
+== ToDo
+=== Clear bullets when the leave map
+=== Replace crappy boxes with some sprites
