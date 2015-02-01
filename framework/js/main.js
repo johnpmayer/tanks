@@ -3,13 +3,55 @@
 // Elm stuff
 
 var gameDiv = document.getElementById('elm-game');
-Elm.embed(Elm.Game, gameDiv);
+var game = Elm.embed(Elm.Game, gameDiv);
+
+var lobbyDiv = document.getElementById('elm-lobby');
+var lobby = Elm.embed(Elm.Lobby, lobbyDiv, {
+  login: [],
+  logout: []
+});
+
+// Auth stuff
+
+lobby.ports.onLogin.subscribe(function() {
+  navigator.id.request();
+});
+
+lobby.ports.onLogout.subscribe(function() {
+  navigator.id.logout();
+});
+
+navigator.id.watch({
+  onlogin: function(assertion) {
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "/persona/verify", true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.addEventListener("loadend", function(e) {
+      var data = JSON.parse(this.responseText);
+      if (data && data.status === "okay") {
+        console.log("You have been logged in as: " + data.email);
+        lobby.ports.login.send([]);
+      }
+    }, false);
+
+    xhr.send(JSON.stringify({
+      assertion: assertion
+    }));
+  },
+  onlogout: function() {
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "/persona/logout", true);
+    xhr.addEventListener("loadend", function(e) {
+      console.log("You have been logged out");
+      lobby.ports.logout.send([]);
+    });
+    xhr.send();
+  }
+});
 
 // web rtc stuff
- 
-var sendChannel;
 
-sendButton.onclick = sendData;
+var sendChannel;
 
 var isChannelReady;
 var isInitiator;
@@ -20,25 +62,25 @@ var remoteStream;
 var turnReady;
 
 var pc_config = webrtcDetectedBrowser === 'firefox' ?
-  {'iceServers':[{'url':'stun:23.21.150.121'}]} : // number IP
-  {'iceServers': [{'url': 'stun:stun.l.google.com:19302'}]};
+{'iceServers':[{'url':'stun:23.21.150.121'}]} : // number IP
+{'iceServers': [{'url': 'stun:stun.l.google.com:19302'}]};
 
 var pc_constraints = {
   'optional': [
-    {'DtlsSrtpKeyAgreement': true},
-    {'RtpDataChannels': true}
+  {'DtlsSrtpKeyAgreement': true},
+  {'RtpDataChannels': true}
   ]};
 
 // Set up audio and video regardless of what devices are present.
 var sdpConstraints = {'mandatory': {
   'OfferToReceiveAudio':true,
-  'OfferToReceiveVideo':true }};
+    'OfferToReceiveVideo':true }};
 
 /////////////////////////////////////////////
 
 var room = location.pathname.substring(1);
 if (room === '') {
-//  room = prompt('Enter room name:');
+  //  room = prompt('Enter room name:');
   room = 'foo';
 } else {
   //
@@ -78,14 +120,14 @@ socket.on('log', function (array){
 ////////////////////////////////////////////////
 
 function sendMessage(message){
-	console.log('Sending message: ', message);
+  console.log('Sending message: ', message);
   socket.emit('message', message);
 }
 
 socket.on('message', function (message){
   console.log('Received message:', message);
   if (message === 'got user media') {
-  	maybeStart();
+    maybeStart();
   } else if (message.type === 'offer') {
     if (!isInitiator && !isStarted) {
       maybeStart();
@@ -143,7 +185,7 @@ function maybeStart() {
 }
 
 window.onbeforeunload = function(e){
-	sendMessage('bye');
+  sendMessage('bye');
 }
 
 /////////////////////////////////////////////////////////
@@ -153,12 +195,12 @@ function createPeerConnection() {
     pc = new RTCPeerConnection(pc_config, pc_constraints);
     pc.onicecandidate = handleIceCandidate;
     console.log('Created RTCPeerConnnection with:\n' +
-      '  config: \'' + JSON.stringify(pc_config) + '\';\n' +
-      '  constraints: \'' + JSON.stringify(pc_constraints) + '\'.');
+        '  config: \'' + JSON.stringify(pc_config) + '\';\n' +
+        '  constraints: \'' + JSON.stringify(pc_constraints) + '\'.');
   } catch (e) {
     console.log('Failed to create PeerConnection, exception: ' + e.message);
     alert('Cannot create RTCPeerConnection object.');
-      return;
+    return;
   }
   pc.onaddstream = handleRemoteStreamAdded;
   pc.onremovestream = handleRemoteStreamRemoved;
@@ -167,12 +209,12 @@ function createPeerConnection() {
     try {
       // Reliable Data Channels not yet supported in Chrome
       sendChannel = pc.createDataChannel("sendDataChannel",
-        {reliable: false});
+          {reliable: false});
       sendChannel.onmessage = handleMessage;
       trace('Created send data channel');
     } catch (e) {
       alert('Failed to create data channel. ' +
-            'You need Chrome M25 or later with RtpDataChannel enabled');
+          'You need Chrome M25 or later with RtpDataChannel enabled');
       trace('createDataChannel() failed with exception: ' + e.message);
     }
     sendChannel.onopen = handleSendChannelStateChange;
@@ -214,7 +256,7 @@ function handleReceiveChannelStateChange() {
 }
 
 function enableMessageInterface(shouldEnable) {
-    if (shouldEnable) {
+  if (shouldEnable) {
   } else {
   }
 }
@@ -240,11 +282,11 @@ function doCall() {
       if (prop.indexOf('Moz') !== -1) {
         delete constraints.mandatory[prop];
       }
-     }
-   }
+    }
+  }
   constraints = mergeConstraints(constraints, sdpConstraints);
   console.log('Sending offer to peer, with constraints: \n' +
-    '  \'' + JSON.stringify(constraints) + '\'.');
+      '  \'' + JSON.stringify(constraints) + '\'.');
   pc.createOffer(setLocalAndSendMessage, null, constraints);
 }
 
@@ -285,7 +327,7 @@ function requestTurn(turn_url) {
     xhr.onreadystatechange = function(){
       if (xhr.readyState === 4 && xhr.status === 200) {
         var turnServer = JSON.parse(xhr.responseText);
-      	console.log('Got TURN server: ', turnServer);
+        console.log('Got TURN server: ', turnServer);
         pc_config.iceServers.push({
           'url': 'turn:' + turnServer.username + '@' + turnServer.turn,
           'credential': turnServer.password
@@ -300,10 +342,10 @@ function requestTurn(turn_url) {
 
 function handleRemoteStreamAdded(event) {
   console.log('Remote stream added.');
- // reattachMediaStream(miniVideo, localVideo);
+  // reattachMediaStream(miniVideo, localVideo);
   attachMediaStream(remoteVideo, event.stream);
   remoteStream = event.stream;
-//  waitForRemoteVideo();
+  //  waitForRemoteVideo();
 }
 function handleRemoteStreamRemoved(event) {
   console.log('Remote stream removed. Event: ', event);
@@ -337,10 +379,10 @@ function preferOpus(sdp) {
   var mLineIndex;
   // Search for m line.
   for (var i = 0; i < sdpLines.length; i++) {
-      if (sdpLines[i].search('m=audio') !== -1) {
-        mLineIndex = i;
-        break;
-      }
+    if (sdpLines[i].search('m=audio') !== -1) {
+      mLineIndex = i;
+      break;
+    }
   }
   if (mLineIndex === null) {
     return sdp;

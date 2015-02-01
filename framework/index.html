@@ -25,6 +25,7 @@
 }
 </style>
 
+<script src="https://login.persona.org/include.js"></script>
 <script src='/socket.io/socket.io.js'></script>
 <script src='js/lib/adapter.js'></script>
 <script src="js/elm.js"></script>
@@ -33,18 +34,27 @@
 
 <body>
 
+<audio controls>
+  <source src="/music/game.mp3" type="audio/mp3">
+  Not supported music
+</audio>
 
 <div class="container">
+
   <div class=row">
-    <!-- game on the left -->
-    <div class="well col-md-8">
-      <h3>Game goes here</h3>
+
+    <!-- Lobby on the left -->
+    <div class="well col-md-3">
+      <div id="elm-lobby"></div>
+    </div>
+
+    <!-- Game in the center -->
+    <div class="well col-md-6">
       <div id="elm-game"></div>
-      <button id="sendButton" disabled>Send</button>
     </div>
 
     <!-- Videos on the right -->
-    <div class="well col-md-4">
+    <div class="well col-md-3">
       <video class="playerVideo" id='localVideo' autoplay muted></video>
       <video class="playerVideo" id='remoteVideo' autoplay></video>
     </div>
